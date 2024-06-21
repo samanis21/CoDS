@@ -2,8 +2,14 @@ import time
 import psutil
 import random
 import string
-from BloomFilter import BloomFilter
 import matplotlib.pyplot as plt
+import sys
+import os
+
+print("PYTHONPATH:", sys.path)
+print("Current directory contents:", os.listdir(os.getcwd()))
+
+from BloomFilter import BloomFilter
 
 def random_string(length=10):
     letters = string.ascii_lowercase
