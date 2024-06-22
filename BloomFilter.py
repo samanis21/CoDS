@@ -1,28 +1,22 @@
-import hashlib
-from BitSet import BitSet
+import math
+import mmh3
+from bitarray import bitarray
 
 class BloomFilter:
     def __init__(self, size, hash_count):
         self.size = size
         self.hash_count = hash_count
-        self.bitset = BitSet(size)
+        self.bit_array = bitarray(size)
+        self.bit_array.setall(False)
 
-    def _hashes(self, item):
-        hash_values = []
+    def add(self, element):
         for i in range(self.hash_count):
-            hash_value = int(hashlib.md5((str(i) + item).encode()).hexdigest(), 16) % self.size
-            hash_values.append(hash_value)
-        return hash_values
+            hash_value = mmh3.hash(element, i) % self.size
+            self.bit_array[hash_value] = True
 
-    def add(self, item):
-        for hash_value in self._hashes(item):
-            self.bitset.set(hash_value)
-
-    def contains(self, item):
-        for hash_value in self._hashes(item):
-            if not self.bitset.get(hash_value):
+    def contains(self, element):
+        for i in range(self.hash_count):
+            hash_value = mmh3.hash(element, i) % self.size
+            if not self.bit_array[hash_value]:
                 return False
         return True
-
-    def __str__(self):
-        return str(self.bitset)
