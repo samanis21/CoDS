@@ -1,17 +1,15 @@
 import time
 import psutil
-import random
-import string
 import matplotlib.pyplot as plt
-import sys
+from BloomFilter import BloomFilter
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 import os
 
-print("PYTHONPATH:", sys.path)
-print("Current directory contents:", os.listdir(os.getcwd()))
-
-from BloomFilter import BloomFilter
-
+output_dir = '/vsc-hard-mounts/leuven-user/363/vsc36394/V2'
 def random_string(length=10):
+    import string
+    import random
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for i in range(length))
 
@@ -24,87 +22,61 @@ def cpu_usage_psutil():
     process = psutil.Process()
     return process.cpu_percent(interval=1.0)
 
-def benchmark_bloom_filter(capacity, error_rate, num_elements):
-    bf = BloomFilter(capacity, error_rate)
+def benchmark_bloom_filter(size, hash_count, num_elements):
+    bloom_filter = BloomFilter(size, hash_count)
+    elements = [f"element_{i}" for i in range(num_elements)]
 
+    # Benchmark insertion
     start_time = time.time()
     start_mem = memory_usage_psutil()
     start_cpu = cpu_usage_psutil()
-
-    for _ in range(num_elements):
-        bf.add(random_string())
-
+    for element in elements:
+        bloom_filter.add(element)
     add_time = time.time() - start_time
     add_mem = memory_usage_psutil() - start_mem
     add_cpu = cpu_usage_psutil() - start_cpu
 
+    # Benchmark search
     start_time = time.time()
     start_mem = memory_usage_psutil()
     start_cpu = cpu_usage_psutil()
-
-    false_positives = 0
-    for _ in range(num_elements):
-        if bf.contains(random_string()):
-            false_positives += 1
-
+    for element in elements:
+        bloom_filter.contains(element)
     check_time = time.time() - start_time
     check_mem = memory_usage_psutil() - start_mem
     check_cpu = cpu_usage_psutil() - start_cpu
 
-    actual_bit_usage = sum(bin(x).count('1') for x in bf.bitset.bitset)
-    compression_rate = actual_bit_usage / bf.bitset.size
+    return add_time, check_time, add_mem, check_mem, add_cpu, check_cpu
 
-    return {
-        "add_time": add_time,
-        "check_time": check_time,
-        "add_mem": add_mem,
-        "check_mem": check_mem,
-        "add_cpu": add_cpu,
-        "check_cpu": check_cpu,
-        "false_positive_rate": false_positives / num_elements,
-        "compression_rate": compression_rate,
-    }
+def plot_benchmark(results, filename):
+    sizes, insertion_times, search_times, _, _, _, _ = zip(*results)
+    plt.figure(figsize=(10, 5))
+    plt.plot(sizes, insertion_times, label='Insertion Time')
+    plt.plot(sizes, search_times, label='Search Time')
+    plt.xlabel('Number of Elements')
+    plt.ylabel('Time (seconds)')
+    plt.title('Bloom Filter Benchmark')
+    plt.legend()
+    try:
+        output_file = os.path.join(output_dir, filename)
+        plt.savefig(output_file, dpi=300)
+        print(f"Benchmark plot saved to: {filename}")
+    except Exception as e:
+        print(f"Error saving benchmark plot: {e}")
+   
+    
 
 if __name__ == "__main__":
-    capacities = [10**5, 10**6, 10**7]
-    error_rate = 0.01
-    num_elements = 10**5
-
+    sizes = [1000, 5000, 10000, 50000, 100000]
+    hash_count = 5
     results = []
-    for capacity in capacities:
-        results.append(benchmark_bloom_filter(capacity, error_rate, num_elements))
 
-    # Plotting results
-    plt.figure(figsize=(14, 8))
+    for size in sizes:
+        add_time, check_time, add_mem, check_mem, add_cpu, check_cpu = benchmark_bloom_filter(size, hash_count, size)
+        results.append((size, add_time, check_time, add_mem, check_mem, add_cpu, check_cpu))
 
-    add_times = [result['add_time'] for result in results]
-    check_times = [result['check_time'] for result in results]
-    false_positive_rates = [result['false_positive_rate'] for result in results]
-    compression_rates = [result['compression_rate'] for result in results]
-
-    plt.subplot(2, 2, 1)
-    plt.plot(capacities, add_times, 'o-', label='Add Time')
-    plt.ylabel('Add Time (s)')
-    plt.xlabel('Capacity')
-    plt.legend()
-
-    plt.subplot(2, 2, 2)
-    plt.plot(capacities, check_times, 'o-', label='Check Time')
-    plt.ylabel('Check Time (s)')
-    plt.xlabel('Capacity')
-    plt.legend()
-
-    plt.subplot(2, 2, 3)
-    plt.plot(capacities, false_positive_rates, 'o-', label='False Positive Rate')
-    plt.ylabel('False Positive Rate')
-    plt.xlabel('Capacity')
-    plt.legend()
-
-    plt.subplot(2, 2, 4)
-    plt.plot(capacities, compression_rates, 'o-', label='Compression Rate')
-    plt.ylabel('Compression Rate')
-    plt.xlabel('Capacity')
-    plt.legend()
-
-    plt.tight_layout()
-    plt.show()
+    plot_benchmark(results, 'benchmark.png')
+    output_file = os.path.join(output_dir, 'benchmark_results.txt')
+    with open(output_file, 'w') as f:
+        for size, add_time, check_time, add_mem, check_mem, add_cpu, check_cpu in results:
+            f.write(f"Size: {size}, Insertion Time: {add_time}, Search Time: {check_time}, Insertion Memory: {add_mem}, Search Memory: {check_mem}, Insertion CPU: {add_cpu}, Search CPU: {check_cpu}\n")
