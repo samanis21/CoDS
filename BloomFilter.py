@@ -1,11 +1,11 @@
 import hashlib
-from Bitset import Bitset
+from BitSet import BitSet
 
 class BloomFilter:
     def __init__(self, size, hash_count):
         self.size = size
         self.hash_count = hash_count
-        self.bitset = Bitset(size)
+        self.bitset = BitSet(size)
 
     def _hashes(self, item):
         hash_values = []
