@@ -1,0 +1,36 @@
+SLURM_JOB_ID: 61701224
+SLURM_JOB_USER: vsc36394
+SLURM_JOB_ACCOUNT: lp_h_ds_2023_2024
+SLURM_JOB_NAME: bloomfilter_job
+SLURM_CLUSTER_NAME: wice
+SLURM_JOB_PARTITION: batch
+SLURM_NNODES: 1
+SLURM_NODELIST: q28c30n2
+SLURM_JOB_CPUS_PER_NODE: 2
+Date: Sat Jun 22 15:09:25 CEST 2024
+Walltime: 00-01:00:00
+========================================================================
+
+The following have been reloaded with a version change:
+  1) GCCcore/12.3.0 => GCCcore/12.2.0
+  2) Python/3.11.3-GCCcore-12.3.0 => Python/3.10.8-GCCcore-12.2.0
+  3) SQLite/3.42.0-GCCcore-12.3.0 => SQLite/3.39.4-GCCcore-12.2.0
+  4) Tcl/8.6.13-GCCcore-12.3.0 => Tcl/8.6.12-GCCcore-12.2.0
+  5) XZ/5.4.2-GCCcore-12.3.0 => XZ/5.2.7-GCCcore-12.2.0
+  6) binutils/2.40-GCCcore-12.3.0 => binutils/2.39-GCCcore-12.2.0
+  7) bzip2/1.0.8-GCCcore-12.3.0 => bzip2/1.0.8-GCCcore-12.2.0
+  8) libffi/3.4.4-GCCcore-12.3.0 => libffi/3.4.4-GCCcore-12.2.0
+  9) libreadline/8.2-GCCcore-12.3.0 => libreadline/8.2-GCCcore-12.2.0
+ 10) ncurses/6.4-GCCcore-12.3.0 => ncurses/6.3-GCCcore-12.2.0
+ 11) zlib/1.2.13-GCCcore-12.3.0 => zlib/1.2.12-GCCcore-12.2.0
+
+Requirement already satisfied: bitarray in /vsc-hard-mounts/leuven-user/363/vsc36394/.local/lib/python3.10/site-packages (2.9.2)
+
+[notice] A new release of pip available: 22.3.1 -> 24.1
+[notice] To update, run: pip install --upgrade pip
+Requirement already satisfied: mmh3 in /vsc-hard-mounts/leuven-user/363/vsc36394/.local/lib/python3.10/site-packages (4.1.0)
+
+[notice] A new release of pip available: 22.3.1 -> 24.1
+[notice] To update, run: pip install --upgrade pip
+PYTHONPATH is set to:
+/apps/leuven/rocky8/skylake/2023a/software/Python/3.11.3-GCCcore-12.3.0/lib/python3.11/site-packages/:/apps/leuven/rocky8/icelake/2022b/software/matplotlib/3.7.0-gfbf-2022b/lib/python3.10/site-packages:/apps/leuven/rocky8/icelake/2022b/software/Pillow/9.4.0-GCCcore-12.2.0/lib/python3.10/site-packages:/apps/leuven/rocky8/icelake/2022b/software/Tkinter/3.10.8-GCCcore-12.2.0/lib/python3.10/site-packages:/apps/leuven/rocky8/icelake/2022b/software/SciPy-bundle/2023.02-gfbf-2022b/lib/python3.10/site-packages:/apps/leuven/rocky8/icelake/2022b/software/pybind11/2.10.3-GCCcore-12.2.0/lib/python3.10/site-packages:/apps/leuven/rocky8/icelake/2022b/software/Python/3.10.8-GCCcore-12.2.0/easybuild/python:/apps/leuven/rocky8/icelake/2023a/software/psutil/5.9.8-GCCcore-12.3.0/lib/python3.11/site-packages:/vsc-hard-mounts/leuven-user/363/vsc36394/V3
