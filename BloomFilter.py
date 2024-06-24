@@ -1,32 +1,22 @@
-from BitSet import BitSet
+import math
 import mmh3
+from bitarray import bitarray
 
 class BloomFilter:
-    def __init__(self, capacity, error_rate=0.01):
-        self.size = self._optimal_size(capacity, error_rate)
-        self.hash_count = self._optimal_hash_count(capacity, error_rate)
-        self.bitset = BitSet(self.size)
+    def __init__(self, size, hash_count):
+        self.size = size
+        self.hash_count = hash_count
+        self.bit_array = bitarray(size)
+        self.bit_array.setall(False)
 
-    def add(self, item):
-        item = str(item)
+    def add(self, element):
         for i in range(self.hash_count):
-            combined_hash = mmh3.hash(item, i) % self.size
-            self.bitset.add(combined_hash)
+            hash_value = mmh3.hash(element, i) % self.size
+            self.bit_array[hash_value] = True
 
-    def contains(self, item):
-        item = str(item)
+    def contains(self, element):
         for i in range(self.hash_count):
-            combined_hash = mmh3.hash(item, i) % self.size
-            if not self.bitset.contains(combined_hash):
+            hash_value = mmh3.hash(element, i) % self.size
+            if not self.bit_array[hash_value]:
                 return False
         return True
-
-    @staticmethod
-    def _optimal_size(capacity, error_rate):
-        from math import ceil, log
-        return ceil(-(capacity * log(error_rate)) / (log(2) ** 2))
-
-    @staticmethod
-    def _optimal_hash_count(capacity, error_rate):
-        from math import log
-        return round((BloomFilter._optimal_size(capacity, error_rate) / capacity) * log(2))

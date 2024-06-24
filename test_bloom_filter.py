@@ -1,6 +1,7 @@
 import pytest
 from BloomFilter import BloomFilter
 
+
 def test_add_and_contains():
     bf = BloomFilter(100, 0.01)
     bf.add("hello")

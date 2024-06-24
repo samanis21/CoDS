@@ -1,14 +1,22 @@
-class BitSet:
+class Bitset:
     def __init__(self, size):
         self.size = size
-        self.bitset = bytearray((size + 7) // 8)
+        self.bitset = [0] * size
 
-    def add(self, index):
-        byte_index = index // 8
-        bit_index = index % 8
-        self.bitset[byte_index] |= 1 << bit_index
+    def set(self, pos):
+        if pos < 0 or pos >= self.size:
+            raise IndexError("Bitset index out of range")
+        self.bitset[pos] = 1
 
-    def contains(self, index):
-        byte_index = index // 8
-        bit_index = index % 8
-        return (self.bitset[byte_index] & (1 << bit_index)) != 0
+    def get(self, pos):
+        if pos < 0 or pos >= self.size:
+            raise IndexError("Bitset index out of range")
+        return self.bitset[pos]
+
+    def clear(self, pos):
+        if pos < 0 or pos >= self.size:
+            raise IndexError("Bitset index out of range")
+        self.bitset[pos] = 0
+
+    def __str__(self):
+        return ''.join(map(str, self.bitset))

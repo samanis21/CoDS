@@ -1,104 +1,101 @@
 import time
+import os
 import psutil
-import random
-import string
-from BloomFilter import BloomFilter
+import numpy as np
 import matplotlib.pyplot as plt
-
-def random_string(length=10):
-    letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(length))
+from multiprocessing import Process, Queue
+from BloomFilter import BloomFilter
 
 def memory_usage_psutil():
-    process = psutil.Process()
-    mem = process.memory_info()[0] / float(2 ** 20)
-    return mem
+    """Return the memory usage in MB."""
+    process = psutil.Process(os.getpid())
+    return process.memory_info().rss / 1024 ** 2
 
 def cpu_usage_psutil():
-    process = psutil.Process()
-    return process.cpu_percent(interval=1.0)
+    """Return the CPU usage as a percentage."""
+    process = psutil.Process(os.getpid())
+    return process.cpu_percent(interval=0.1)
 
-def benchmark_bloom_filter(capacity, error_rate, num_elements):
-    bf = BloomFilter(capacity, error_rate)
+def worker(args, result_queue):
+    size, hash_count, num_elements = args
+    bloom_filter = BloomFilter(size, hash_count)
+    elements = np.arange(num_elements, dtype=int)
 
+    # Benchmark insertion
     start_time = time.time()
     start_mem = memory_usage_psutil()
     start_cpu = cpu_usage_psutil()
-
-    for _ in range(num_elements):
-        bf.add(random_string())
-
+    for element in map(str, elements):
+        bloom_filter.add(element)
     add_time = time.time() - start_time
     add_mem = memory_usage_psutil() - start_mem
     add_cpu = cpu_usage_psutil() - start_cpu
 
+    # Benchmark search
     start_time = time.time()
     start_mem = memory_usage_psutil()
     start_cpu = cpu_usage_psutil()
-
-    false_positives = 0
-    for _ in range(num_elements):
-        if bf.contains(random_string()):
-            false_positives += 1
-
+    for element in map(str, elements):
+        bloom_filter.contains(element)
     check_time = time.time() - start_time
     check_mem = memory_usage_psutil() - start_mem
     check_cpu = cpu_usage_psutil() - start_cpu
 
-    actual_bit_usage = sum(bin(x).count('1') for x in bf.bitset.bitset)
-    compression_rate = actual_bit_usage / bf.bitset.size
-
-    return {
-        "add_time": add_time,
-        "check_time": check_time,
-        "add_mem": add_mem,
-        "check_mem": check_mem,
-        "add_cpu": add_cpu,
-        "check_cpu": check_cpu,
-        "false_positive_rate": false_positives / num_elements,
-        "compression_rate": compression_rate,
-    }
+    result_queue.put((size, hash_count, add_time, check_time, add_mem, check_mem, add_cpu, check_cpu))
 
 if __name__ == "__main__":
-    capacities = [10**5, 10**6, 10**7]
-    error_rate = 0.01
-    num_elements = 10**5
+    from BloomFilter import BloomFilter
+
+    # Specify the output directory
+    output_dir = '/vsc-hard-mounts/leuven-user/363/vsc36394/V3'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    sizes = [1000, 5000, 10000, 50000, 100000]
+    hash_counts = [3, 5, 7]
+    arguments = [(size, hash_count, size) for size in sizes for hash_count in hash_counts]
 
     results = []
-    for capacity in capacities:
-        results.append(benchmark_bloom_filter(capacity, error_rate, num_elements))
+    for args in arguments:
+        result_queue = Queue()
+        p = Process(target=worker, args=(args, result_queue))
+        p.start()
+        results.append(result_queue.get())
+        p.join()
 
-    # Plotting results
-    plt.figure(figsize=(14, 8))
+    # Plotting the results
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
 
-    add_times = [result['add_time'] for result in results]
-    check_times = [result['check_time'] for result in results]
-    false_positive_rates = [result['false_positive_rate'] for result in results]
-    compression_rates = [result['compression_rate'] for result in results]
+    # Insertion time plot
+    ax1.set_title('Bloom Filter Insertion Time')
+    ax1.set_xlabel('Size')
+    ax1.set_ylabel('Time (seconds)')
+    for hash_count in hash_counts:
+        insertion_times = [result[2] for result in results if result[1] == hash_count]
+        ax1.plot(sizes, insertion_times, label=f"{hash_count} hash functions")
+    ax1.legend()
 
-    plt.subplot(2, 2, 1)
-    plt.plot(capacities, add_times, 'o-', label='Add Time')
-    plt.ylabel('Add Time (s)')
-    plt.xlabel('Capacity')
-    plt.legend()
+    # Search time plot
+    ax2.set_title('Bloom Filter Search Time')
+    ax2.set_xlabel('Size')
+    ax2.set_ylabel('Time (seconds)')
+    for hash_count in hash_counts:
+        search_times = [result[3] for result in results if result[1] == hash_count]
+        ax2.plot(sizes, search_times, label=f"{hash_count} hash functions")
+    ax2.legend()
 
-    plt.subplot(2, 2, 2)
-    plt.plot(capacities, check_times, 'o-', label='Check Time')
-    plt.ylabel('Check Time (s)')
-    plt.xlabel('Capacity')
-    plt.legend()
+    # Save the plot and results
+    plt.savefig(os.path.join(output_dir, 'benchmark_results.png'))
+    with open(os.path.join(output_dir, 'benchmark_results.txt'), 'w') as f:
+        for result in results:
+            f.write(f"Bloom Filter Size: {result[0]}\n")
+            f.write(f"Number of Hash Functions: {result[1]}\n")
+            f.write(f"Insertion Time (seconds): {result[2]}\n")
+            f.write(f"Search Time (seconds): {result[3]}\n")
+            f.write(f"Insertion Memory Usage (MB): {result[4]}\n")
+            f.write(f"Search Memory Usage (MB): {result[5]}\n")
+            f.write(f"Insertion CPU Usage (%): {result[6]}\n")
+            f.write(f"Search CPU Usage (%): {result[7]}\n")
+            f.write("\n")
 
-    plt.subplot(2, 2, 3)
-    plt.plot(capacities, false_positive_rates, 'o-', label='False Positive Rate')
-    plt.ylabel('False Positive Rate')
-    plt.xlabel('Capacity')
-    plt.legend()
-
-    plt.subplot(2, 2, 4)
-    plt.plot(capacities, compression_rates, 'o-', label='Compression Rate')
-    plt.ylabel('Compression Rate')
-    plt.xlabel('Capacity')
-    plt.legend()
-
-    plt.tight_layout()
     plt.show()
