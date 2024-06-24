@@ -12,15 +12,6 @@
 module load Python/3.11.3-GCCcore-12.3.0
 module load psutil/5.9.8-GCCcore-12.3.0
 module load matplotlib/3.7.0-gfbf-2022b
-
-# Install the bitarray module
-pip install --user bitarray
-# Install the mmh3 module
-pip install --user mmh3
-
-# Uncomment these lines if needed to create directory and set PYTHONPATH
-
-cd /vsc-hard-mounts/leuven-user/363/vsc36394/V3
 PYTHON_LIB="/apps/leuven/rocky8/skylake/2023a/software/Python/3.11.3-GCCcore-12.3.0/lib/python3.11/site-packages/"
 export PYTHONPATH="${PYTHON_LIB}:${PYTHONPATH}"
 export PYTHONPATH=$PYTHONPATH:$(pwd)
